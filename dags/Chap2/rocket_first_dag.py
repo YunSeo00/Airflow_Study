@@ -17,23 +17,23 @@ dag = DAG(
 
 download_launches = BashOperator( # BashOperator를 이용하여 curl로 URL 결괏값 다운로드
     task_id = "download_launches", # 태스크 이름
-    bash_command = "curl -o /Users/yschoi/tmp/launches.json -L 'https://ll.thespacedevs.com/2.0.0/launch/upcoming'",
+    bash_command = "curl -o /tmp/launches.json -L 'https://ll.thespacedevs.com/2.0.0/launch/upcoming'",
     dag = dag
 )
 
 def _get_pictures(): # 결과값을 파싱하고 모든 로켓 사진을 다운로드 하는 함수
     # 경로가 존재하는지 확인
-    pathlib.Path("/Users/yschoi/tmp/images").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("/tmp/images").mkdir(parents=True, exist_ok=True)
 
     # launches.json 파일에 있는 모든 그림 파일 다운로드
-    with open("/Users/yschoi/tmp/launches.json") as f:
+    with open("/tmp/launches.json") as f:
         launches = json.load(f)
         image_urls = [launch["image"] for launch in launches["results"]]
         for image_url in image_urls:
             try:
                 response = requests.get(image_url)
                 image_filename = image_url.split("/")[-1]
-                target_file = f"/Users/yschoi/tmp/images/{image_filename}"
+                target_file = f"/tmp/images/{image_filename}"
                 with open(target_file, "wb") as f:
                     f.write(response.content)
                 print(f"Downloaded {image_url} to {target_file}")
@@ -50,7 +50,7 @@ get_pictures = PythonOperator( # dag에서 PythonOperator를 사용하여 파이
 
 notify = BashOperator(
     task_id = "notify",
-    bash_command = 'echo "There are now $(ls /Users/yschoi/tmp/images/ | wc -l) images."',
+    bash_command = 'echo "There are now $(ls /tmp/images/ | wc -l) images."',
     dag = dag
 )
 
